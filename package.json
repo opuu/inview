@@ -1,7 +1,7 @@
 {
     "name": "@opuu/inview",
-    "version": "2.2.0",
-    "description": "Ultra-lightweight JavaScript library for viewport detection - intersection observer, lazy loading, scroll animations, infinite scroll, element visibility tracking with TypeScript support. Zero dependencies, ~1KB gzipped.",
+    "version": "2.2.1",
+    "description": "Lightweight JavaScript library for viewport detection - intersection observer, lazy loading, scroll animations, infinite scroll, element visibility tracking with TypeScript support. Zero dependencies, ~1KB gzipped.",
     "type": "module",
     "files": [
         "dist",
