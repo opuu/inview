@@ -1,0 +1,48 @@
+# Development files
+.gitignore
+.prettierrc
+*.config.js
+*.config.ts
+tsconfig.json
+eslint.config.js
+vite.config.ts
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Development and demo
+demo/
+.vscode/
+.idea/
+
+# Documentation (not needed since README.md and LICENSE are included by default)
+CODE_OF_CONDUCT.md
+
+# Temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Build artifacts that shouldn't be published
+coverage/
+.nyc_output/
+test/
+tests/
+spec/
+*.test.*
+*.spec.*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
