@@ -6,11 +6,9 @@ export default defineConfig({
 	build: {
 		target: "es2015",
 		lib: {
-			entry: {
-				inview: "src/inview.ts",
-				"inview-vue": "src/inview-vue.ts",
-			},
+			entry: "src/inview.ts",
 			name: "InView",
+			fileName: "inview",
 		},
 	},
 });

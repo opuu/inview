@@ -100,6 +100,11 @@ class InView {
 	private single: boolean = false;
 
 	/**
+	 * Array to store all observers for cleanup
+	 */
+	private observers: IntersectionObserver[] = [];
+
+	/**
 	 * Constructor
 	 *
 	 * Create a new InView instance
@@ -208,6 +213,33 @@ class InView {
 	}
 
 	/**
+	 * Destroy the observer and clean up all resources
+	 *
+	 * @returns {InView} - Returns the InView instance
+	 *
+	 * @example
+	 * const inview = new InView(".selector");
+	 * inview.on("enter", (e) => {});
+	 * // Clean up when done
+	 * inview.destroy();
+	 */
+	public destroy(): InView {
+		// Disconnect all observers
+		this.observers.forEach((observer) => {
+			observer.disconnect();
+		});
+
+		// Clear the observers array
+		this.observers = [];
+
+		// Reset other properties
+		this.paused = false;
+		this.items = null;
+
+		return this;
+	}
+
+	/**
 	 * Listen for enter or exit events
 	 *
 	 * @param {"enter" | "exit"} event - Event type
@@ -295,6 +327,9 @@ class InView {
 			} else {
 				console.error("InView: No items found.");
 			}
+
+			// Store the observer for cleanup
+			this.observers.push(observer);
 		} else {
 			console.error("InView: IntersectionObserver not supported.");
 		}

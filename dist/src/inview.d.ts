@@ -93,6 +93,10 @@ declare class InView {
      */
     private single;
     /**
+     * Array to store all observers for cleanup
+     */
+    private observers;
+    /**
      * Constructor
      *
      * Create a new InView instance
@@ -151,6 +155,18 @@ declare class InView {
      * inview.setDelay(1000);
      */
     setDelay(delay: number): InView;
+    /**
+     * Destroy the observer and clean up all resources
+     *
+     * @returns {InView} - Returns the InView instance
+     *
+     * @example
+     * const inview = new InView(".selector");
+     * inview.on("enter", (e) => {});
+     * // Clean up when done
+     * inview.destroy();
+     */
+    destroy(): InView;
     /**
      * Listen for enter or exit events
      *

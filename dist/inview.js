@@ -1,4 +1,4 @@
-class n {
+class h {
   /**
    * Constructor
    *
@@ -18,10 +18,10 @@ class n {
    * });
    */
   constructor(e) {
-    this.items = null, this.paused = !1, this.delay = 0, this.threshold = [], this.single = !1;
-    let s = 0.01;
-    typeof e == "string" ? (this.items = document.querySelectorAll(e), this.delay = 0) : typeof e == "object" && (e.delay && (this.delay = e.delay), e.single && (this.single = e.single), e.precision === "low" ? s = 0.1 : e.precision === "medium" ? s = 0.01 : e.precision === "high" && (s = 1e-3), this.single ? this.items = document.querySelector(e.selector) : this.items = document.querySelectorAll(e.selector));
-    for (let i = 0; i <= 1; i += s)
+    this.items = null, this.paused = !1, this.delay = 0, this.threshold = [], this.single = !1, this.observers = [];
+    let t = 0.01;
+    typeof e == "string" ? (this.items = document.querySelectorAll(e), this.delay = 0) : typeof e == "object" && (e.delay && (this.delay = e.delay), e.single && (this.single = e.single), e.precision === "low" ? t = 0.1 : e.precision === "medium" ? t = 0.01 : e.precision === "high" && (t = 1e-3), this.single ? this.items = document.querySelector(e.selector) : this.items = document.querySelectorAll(e.selector));
+    for (let i = 0; i <= 1; i += t)
       this.threshold.push(i);
   }
   /**
@@ -71,6 +71,22 @@ class n {
     return this.delay = e, this;
   }
   /**
+   * Destroy the observer and clean up all resources
+   *
+   * @returns {InView} - Returns the InView instance
+   *
+   * @example
+   * const inview = new InView(".selector");
+   * inview.on("enter", (e) => {});
+   * // Clean up when done
+   * inview.destroy();
+   */
+  destroy() {
+    return this.observers.forEach((e) => {
+      e.disconnect();
+    }), this.observers = [], this.paused = !1, this.items = null, this;
+  }
+  /**
    * Listen for enter or exit events
    *
    * @param {"enter" | "exit"} event - Event type
@@ -95,24 +111,24 @@ class n {
    *  console.log("exit");
    * });
    */
-  on(e, s) {
+  on(e, t) {
     if ("IntersectionObserver" in window) {
       const i = new IntersectionObserver(
         (r) => {
-          r.forEach((t) => {
-            if (e === "enter" && t.intersectionRatio > 0 || e === "exit" && t.intersectionRatio === 0) {
+          r.forEach((s) => {
+            if (e === "enter" && s.intersectionRatio > 0 || e === "exit" && s.intersectionRatio === 0) {
               const o = {
-                percentage: t.intersectionRatio * 100,
-                rootBounds: t.rootBounds,
-                boundingClientRect: t.boundingClientRect,
-                intersectionRect: t.intersectionRect,
-                target: t.target,
-                time: t.time,
+                percentage: s.intersectionRatio * 100,
+                rootBounds: s.rootBounds,
+                boundingClientRect: s.boundingClientRect,
+                intersectionRect: s.intersectionRect,
+                target: s.target,
+                time: s.time,
                 event: e
               };
               this.paused || (this.delay > 0 ? setTimeout(() => {
-                s(o);
-              }, this.delay) : s(o));
+                t(o);
+              }, this.delay) : t(o));
             }
           });
         },
@@ -122,12 +138,12 @@ class n {
       );
       this.items instanceof Element ? i.observe(this.items) : this.items instanceof NodeList ? this.items.forEach((r) => {
         i.observe(r);
-      }) : console.error("InView: No items found.");
+      }) : console.error("InView: No items found."), this.observers.push(i);
     } else
       console.error("InView: IntersectionObserver not supported.");
     return this;
   }
 }
 export {
-  n as default
+  h as default
 };
