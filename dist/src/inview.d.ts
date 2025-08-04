@@ -4,7 +4,7 @@
  * @typedef {Object} InViewConfig
  *
  * @property {string} selector - CSS selector
- * @property {number} delay - Delay in ms (default: 0)
+ * @property {number} delay - Debounce delay in ms (default: 0)
  * @property {"low" | "medium" | "high"} precision - Precision of the observer (default: medium)
  * @property {boolean} single - Only observe the first element (default: false)
  *
@@ -81,7 +81,7 @@ declare class InView {
      */
     private paused;
     /**
-     * Delay the callback
+     * Debounce delay for the callback
      */
     private delay;
     /**
@@ -96,6 +96,10 @@ declare class InView {
      * Array to store all observers for cleanup
      */
     private observers;
+    /**
+     * WeakMap to store debounce timers for each element
+     */
+    private debounceTimers;
     /**
      * Constructor
      *
@@ -115,6 +119,14 @@ declare class InView {
      * });
      */
     constructor(config: InViewConfig | string);
+    /**
+     * Debounce function to delay callback execution
+     *
+     * @param {Element} element - The element triggering the event
+     * @param {CallableFunction} callback - The callback to execute
+     * @param {InViewEvent} event - The event object to pass to callback
+     */
+    private debounceCallback;
     /**
      * Pause the observer
      *
@@ -142,16 +154,16 @@ declare class InView {
      */
     resume(): InView;
     /**
-     * Set the delay
+     * Set the debounce delay
      *
-     * @param {number} delay - Delay in ms
+     * @param {number} delay - Debounce delay in ms
      *
      * @returns {InView} - Returns the InView instance
      *
      * @example
      * const inview = new InView(".selector");
      * inview.on("enter", (e) => {});
-     * // set delay to 1000ms
+     * // set debounce delay to 1000ms
      * inview.setDelay(1000);
      */
     setDelay(delay: number): InView;

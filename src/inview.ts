@@ -4,7 +4,7 @@
  * @typedef {Object} InViewConfig
  *
  * @property {string} selector - CSS selector
- * @property {number} delay - Delay in ms (default: 0)
+ * @property {number} delay - Debounce delay in ms (default: 0)
  * @property {"low" | "medium" | "high"} precision - Precision of the observer (default: medium)
  * @property {boolean} single - Only observe the first element (default: false)
  *
@@ -85,7 +85,7 @@ class InView {
 	private paused: boolean = false;
 
 	/**
-	 * Delay the callback
+	 * Debounce delay for the callback
 	 */
 	private delay: number = 0;
 
@@ -103,6 +103,11 @@ class InView {
 	 * Array to store all observers for cleanup
 	 */
 	private observers: IntersectionObserver[] = [];
+
+	/**
+	 * WeakMap to store debounce timers for each element
+	 */
+	private debounceTimers: WeakMap<Element, number> = new WeakMap();
 
 	/**
 	 * Constructor
@@ -161,6 +166,32 @@ class InView {
 	}
 
 	/**
+	 * Debounce function to delay callback execution
+	 *
+	 * @param {Element} element - The element triggering the event
+	 * @param {CallableFunction} callback - The callback to execute
+	 * @param {InViewEvent} event - The event object to pass to callback
+	 */
+	private debounceCallback(element: Element, callback: CallableFunction, event: InViewEvent): void {
+		// Clear existing timer for this element
+		const existingTimer = this.debounceTimers.get(element);
+		if (existingTimer) {
+			clearTimeout(existingTimer);
+		}
+
+		// Set new timer
+		if (this.delay > 0) {
+			const timerId = window.setTimeout(() => {
+				this.debounceTimers.delete(element);
+				callback(event);
+			}, this.delay);
+			this.debounceTimers.set(element, timerId);
+		} else {
+			callback(event);
+		}
+	}
+
+	/**
 	 * Pause the observer
 	 *
 	 * @returns {InView} - Returns the InView instance
@@ -195,16 +226,16 @@ class InView {
 	}
 
 	/**
-	 * Set the delay
+	 * Set the debounce delay
 	 *
-	 * @param {number} delay - Delay in ms
+	 * @param {number} delay - Debounce delay in ms
 	 *
 	 * @returns {InView} - Returns the InView instance
 	 *
 	 * @example
 	 * const inview = new InView(".selector");
 	 * inview.on("enter", (e) => {});
-	 * // set delay to 1000ms
+	 * // set debounce delay to 1000ms
 	 * inview.setDelay(1000);
 	 */
 	public setDelay(delay: number): InView {
@@ -224,6 +255,22 @@ class InView {
 	 * inview.destroy();
 	 */
 	public destroy(): InView {
+		// Clear all debounce timers
+		if (this.items instanceof Element) {
+			const existingTimer = this.debounceTimers.get(this.items);
+			if (existingTimer) {
+				clearTimeout(existingTimer);
+			}
+		} else if (this.items instanceof NodeList) {
+			this.items.forEach((item) => {
+				const existingTimer = this.debounceTimers.get(item);
+				if (existingTimer) {
+					clearTimeout(existingTimer);
+				}
+			});
+		}
+		this.debounceTimers = new WeakMap();
+
 		// Disconnect all observers
 		this.observers.forEach((observer) => {
 			observer.disconnect();
@@ -296,16 +343,10 @@ class InView {
 							};
 
 							/**
-							 * Call the callback function if not paused and if delay is over
+							 * Call the callback function if not paused, using debounce if delay is set
 							 */
 							if (!this.paused) {
-								if (this.delay > 0) {
-									setTimeout(() => {
-										callback(e);
-									}, this.delay);
-								} else {
-									callback(e);
-								}
+								this.debounceCallback(entry.target, callback, e);
 							}
 						}
 					});

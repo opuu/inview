@@ -18,11 +18,28 @@ class h {
    * });
    */
   constructor(e) {
-    this.items = null, this.paused = !1, this.delay = 0, this.threshold = [], this.single = !1, this.observers = [];
-    let t = 0.01;
-    typeof e == "string" ? (this.items = document.querySelectorAll(e), this.delay = 0) : typeof e == "object" && (e.delay && (this.delay = e.delay), e.single && (this.single = e.single), e.precision === "low" ? t = 0.1 : e.precision === "medium" ? t = 0.01 : e.precision === "high" && (t = 1e-3), this.single ? this.items = document.querySelector(e.selector) : this.items = document.querySelectorAll(e.selector));
-    for (let i = 0; i <= 1; i += t)
+    this.items = null, this.paused = !1, this.delay = 0, this.threshold = [], this.single = !1, this.observers = [], this.debounceTimers = /* @__PURE__ */ new WeakMap();
+    let s = 0.01;
+    typeof e == "string" ? (this.items = document.querySelectorAll(e), this.delay = 0) : typeof e == "object" && (e.delay && (this.delay = e.delay), e.single && (this.single = e.single), e.precision === "low" ? s = 0.1 : e.precision === "medium" ? s = 0.01 : e.precision === "high" && (s = 1e-3), this.single ? this.items = document.querySelector(e.selector) : this.items = document.querySelectorAll(e.selector));
+    for (let i = 0; i <= 1; i += s)
       this.threshold.push(i);
+  }
+  /**
+   * Debounce function to delay callback execution
+   *
+   * @param {Element} element - The element triggering the event
+   * @param {CallableFunction} callback - The callback to execute
+   * @param {InViewEvent} event - The event object to pass to callback
+   */
+  debounceCallback(e, s, i) {
+    const r = this.debounceTimers.get(e);
+    if (r && clearTimeout(r), this.delay > 0) {
+      const t = window.setTimeout(() => {
+        this.debounceTimers.delete(e), s(i);
+      }, this.delay);
+      this.debounceTimers.set(e, t);
+    } else
+      s(i);
   }
   /**
    * Pause the observer
@@ -55,16 +72,16 @@ class h {
     return this.paused = !1, this;
   }
   /**
-   * Set the delay
+   * Set the debounce delay
    *
-   * @param {number} delay - Delay in ms
+   * @param {number} delay - Debounce delay in ms
    *
    * @returns {InView} - Returns the InView instance
    *
    * @example
    * const inview = new InView(".selector");
    * inview.on("enter", (e) => {});
-   * // set delay to 1000ms
+   * // set debounce delay to 1000ms
    * inview.setDelay(1000);
    */
   setDelay(e) {
@@ -82,7 +99,14 @@ class h {
    * inview.destroy();
    */
   destroy() {
-    return this.observers.forEach((e) => {
+    if (this.items instanceof Element) {
+      const e = this.debounceTimers.get(this.items);
+      e && clearTimeout(e);
+    } else this.items instanceof NodeList && this.items.forEach((e) => {
+      const s = this.debounceTimers.get(e);
+      s && clearTimeout(s);
+    });
+    return this.debounceTimers = /* @__PURE__ */ new WeakMap(), this.observers.forEach((e) => {
       e.disconnect();
     }), this.observers = [], this.paused = !1, this.items = null, this;
   }
@@ -111,24 +135,22 @@ class h {
    *  console.log("exit");
    * });
    */
-  on(e, t) {
+  on(e, s) {
     if ("IntersectionObserver" in window) {
       const i = new IntersectionObserver(
         (r) => {
-          r.forEach((s) => {
-            if (e === "enter" && s.intersectionRatio > 0 || e === "exit" && s.intersectionRatio === 0) {
+          r.forEach((t) => {
+            if (e === "enter" && t.intersectionRatio > 0 || e === "exit" && t.intersectionRatio === 0) {
               const o = {
-                percentage: s.intersectionRatio * 100,
-                rootBounds: s.rootBounds,
-                boundingClientRect: s.boundingClientRect,
-                intersectionRect: s.intersectionRect,
-                target: s.target,
-                time: s.time,
+                percentage: t.intersectionRatio * 100,
+                rootBounds: t.rootBounds,
+                boundingClientRect: t.boundingClientRect,
+                intersectionRect: t.intersectionRect,
+                target: t.target,
+                time: t.time,
                 event: e
               };
-              this.paused || (this.delay > 0 ? setTimeout(() => {
-                t(o);
-              }, this.delay) : t(o));
+              this.paused || this.debounceCallback(t.target, s, o);
             }
           });
         },
