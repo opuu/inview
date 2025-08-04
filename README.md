@@ -1,31 +1,9 @@
-# InView: Is the element in viewport?
+# InView
 
-A lightweight, high-performance JavaScript library for detecting element visibility in the viewport. Built with TypeScript and powered by the Intersection Observer API for optimal performance.
+A lightweight JavaScript library for detecting when elements enter or exit the viewport.
 
 [![npm version](https://badge.fury.io/js/%40opuu%2Finview.svg)](https://badge.fury.io/js/%40opuu%2Finview)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@opuu/inview)](https://bundlephobia.com/package/@opuu/inview)
-[![JSDelivr Hits](https://data.jsdelivr.com/v1/package/npm/@opuu/inview/badge?style=rounded)](https://www.jsdelivr.com/package/npm/@opuu/inview)
-
-## Why InView?
-
-InView provides a simple yet powerful API for tracking element visibility, making it perfect for:
-
-- **Lazy Loading**: Load images, videos, and content as they come into view
-- **Scroll Animations**: Trigger animations when elements enter the viewport
-- **Infinite Scrolling**: Load more content as users scroll down
-- **Analytics Tracking**: Track element visibility for user engagement metrics
-- **Performance Optimization**: Reduce initial page load by deferring non-critical content
-
-## Key Features
-
-- **Ultra-lightweight**: Only ~1KB gzipped with zero dependencies
-- **TypeScript Support**: Complete type definitions included
-- **High Performance**: Built on native Intersection Observer API
-- **Flexible Configuration**: Customizable precision, delay, and observation modes
-- **Framework Agnostic**: Works with React, Vue, Angular, or vanilla JavaScript
-- **Modern Browser Support**: Compatible with all browsers supporting Intersection Observer
 
 ## Installation
 
@@ -33,17 +11,114 @@ InView provides a simple yet powerful API for tracking element visibility, makin
 npm install @opuu/inview
 ```
 
-```bash
-pnpm add @opuu/inview
+## Quick Start
+
+```javascript
+import InView from "@opuu/inview";
+
+const observer = new InView(".my-element");
+
+observer.on("enter", (event) => {
+	console.log("Element visible:", event.percentage + "%");
+});
+
+observer.on("exit", (event) => {
+	console.log("Element hidden");
+});
 ```
 
-```bash
-yarn add @opuu/inview
+## Common Examples
+
+### Lazy Loading Images
+
+```javascript
+import InView from "@opuu/inview";
+
+const observer = new InView(".lazy-image");
+
+observer.on("enter", (event) => {
+	const img = event.target;
+	img.src = img.dataset.src;
+	img.classList.add("loaded");
+});
 ```
 
-### CDN Usage
+### Scroll Animations
 
-<!-- hit counter -->
+```javascript
+import InView from "@opuu/inview";
+
+const observer = new InView(".animate-on-scroll");
+
+observer.on("enter", (event) => {
+	event.target.classList.add("animate");
+});
+
+observer.on("exit", (event) => {
+	event.target.classList.remove("animate");
+});
+```
+
+### Infinite Scrolling
+
+```javascript
+import InView from "@opuu/inview";
+
+const observer = new InView(".load-more-trigger");
+
+observer.on("enter", (event) => {
+	loadMoreContent();
+});
+```
+
+## API Reference
+
+## Configuration
+
+You can pass options when creating an InView instance:
+
+```javascript
+const observer = new InView({
+	selector: ".my-element",
+	delay: 100, // Debounce delay in ms
+	precision: "high", // "low", "medium", or "high"
+	single: true, // Only observe first element
+});
+```
+
+| Option      | Default    | Description                             |
+| ----------- | ---------- | --------------------------------------- |
+| `selector`  | required   | CSS selector for elements to observe    |
+| `delay`     | `0`        | Debounce delay in milliseconds          |
+| `precision` | `"medium"` | Observation precision level             |
+| `single`    | `false`    | Only observe the first matching element |
+
+## Methods
+
+```javascript
+observer.on("enter", callback); // Element enters viewport
+observer.on("exit", callback); // Element exits viewport
+observer.pause(); // Pause observation
+observer.resume(); // Resume observation
+observer.setDelay(100); // Update debounce delay
+observer.destroy(); // Clean up
+```
+
+## Event Object
+
+Callbacks receive an event object with:
+
+```javascript
+{
+	percentage: 75,           // Visibility percentage (0-100)
+	target: Element,          // The observed element
+	time: 1234567890,         // Timestamp
+	event: "enter" | "exit"   // Event type
+	// ... other properties
+}
+```
+
+## CDN Usage
 
 ```html
 <script type="module">
@@ -51,215 +126,9 @@ yarn add @opuu/inview
 </script>
 ```
 
-## Quick Start
+## License
 
-```javascript
-import InView from "@opuu/inview";
-
-// Basic usage - observe elements by CSS selector
-const observer = new InView(".my-element");
-
-observer.on("enter", (event) => {
-	console.log("Element is now visible:", event.percentage + "%");
-	event.target.classList.add("visible");
-});
-
-observer.on("exit", (event) => {
-	console.log("Element is no longer visible");
-	event.target.classList.remove("visible");
-});
-```
-
-## Advanced Configuration
-
-```javascript
-import InView from "@opuu/inview";
-
-const observer = new InView({
-	selector: ".lazy-image",
-	delay: 100, // 100ms debounce delay - callbacks are debounced for better performance
-	precision: "high", // High precision tracking (0.1% increments)
-	single: true, // Only observe the first matching element
-});
-
-observer.on("enter", (event) => {
-	// Load image when it enters viewport
-	// This callback is debounced - rapid scroll events won't trigger multiple times
-	const img = event.target;
-	img.src = img.dataset.src;
-	img.classList.add("loaded");
-});
-```
-
-## API Reference
-
-### Constructor
-
-Create a new InView instance:
-
-```javascript
-// Using CSS selector
-const observer = new InView(".my-selector");
-
-// Using configuration object
-const observer = new InView({
-	selector: ".my-selector",
-	delay: 100,
-	precision: "medium",
-	single: false,
-});
-```
-
-### Configuration Options
-
-| Option      | Type                              | Default      | Description                                                |
-| ----------- | --------------------------------- | ------------ | ---------------------------------------------------------- |
-| `selector`  | `string`                          | **required** | CSS selector for elements to observe                       |
-| `delay`     | `number`                          | `0`          | Debounce delay in milliseconds before triggering callbacks |
-| `precision` | `"low"` \| `"medium"` \| `"high"` | `"medium"`   | Intersection detection precision                           |
-| `single`    | `boolean`                         | `false`      | Whether to observe only the first matching element         |
-
-#### Precision Levels
-
-- **`"low"`**: 10% increments (0.1) - Best performance, less precise
-- **`"medium"`**: 1% increments (0.01) - Balanced performance and precision
-- **`"high"`**: 0.1% increments (0.001) - Highest precision, slight performance cost
-
-### Methods
-
-#### `on(event, callback)`
-
-Register event listeners for visibility changes:
-
-```javascript
-observer.on("enter", (event) => {
-	// Element entered viewport
-	console.log(`${event.percentage}% visible`);
-});
-
-observer.on("exit", (event) => {
-	// Element exited viewport
-	event.target.classList.remove("visible");
-});
-```
-
-**Parameters:**
-
-- `event`: `"enter"` | `"exit"` - The event type to listen for
-- `callback`: `(event: InViewEvent) => void` - Function to call when event occurs
-
-#### `pause()`
-
-Temporarily pause observation (stops triggering callbacks):
-
-```javascript
-observer.pause();
-```
-
-#### `resume()`
-
-Resume observation after pausing:
-
-```javascript
-observer.resume();
-```
-
-#### `setDelay(delay)`
-
-Update the debounce delay:
-
-```javascript
-observer.setDelay(200); // Set 200ms debounce delay
-```
-
-#### `destroy()`
-
-Clean up and disconnect all observers:
-
-```javascript
-observer.destroy();
-```
-
-### InViewEvent Object
-
-Event callbacks receive an `InViewEvent` object with the following properties:
-
-```typescript
-interface InViewEvent {
-	percentage: number; // Visibility percentage (0-100)
-	rootBounds: DOMRectReadOnly | null; // Viewport rectangle
-	boundingClientRect: DOMRectReadOnly; // Element rectangle
-	intersectionRect: DOMRectReadOnly; // Intersection rectangle
-	target: Element; // The observed element
-	time: number; // Event timestamp
-	event: "enter" | "exit"; // Event type
-}
-```
-
-## TypeScript Support
-
-InView includes complete TypeScript definitions:
-
-```typescript
-import InView, { InViewConfig, InViewEvent } from "@opuu/inview";
-
-const config: InViewConfig = {
-	selector: ".my-element",
-	delay: 100,
-	precision: "high",
-	single: true,
-};
-
-const observer: InView = new InView(config);
-
-observer.on("enter", (event: InViewEvent) => {
-	console.log(`Element ${event.target.id} is ${event.percentage}% visible`);
-});
-```
-
-## Performance & Debouncing
-
-InView includes intelligent debouncing to optimize performance during rapid scrolling:
-
-### How Debouncing Works
-
-When a `delay` is configured, InView will debounce callback execution:
-
-- **Without debouncing**: Each scroll event triggers callbacks immediately
-- **With debouncing**: Callbacks are delayed and previous pending callbacks are cancelled
-
-```javascript
-const observer = new InView({
-	selector: ".element",
-	delay: 100, // 100ms debounce delay
-});
-
-observer.on("enter", (event) => {
-	// This callback is debounced - only executes after 100ms of no new events
-	console.log("Element entered viewport");
-});
-```
-
-### Benefits of Debouncing
-
-- **Reduced CPU Usage**: Fewer callback executions during rapid scrolling
-- **Smoother Performance**: Prevents callback spam that can cause frame drops
-- **Battery Efficiency**: Less processing on mobile devices
-- **Better UX**: More predictable behavior during fast scrolling
-
-### Recommended Delay Values
-
-- **Lazy Loading**: `50-100ms` - Balance between responsiveness and performance
-- **Animations**: `100-200ms` - Prevents animation flickering during scroll
-- **Analytics**: `200-500ms` - Ensures user has settled on content
-- **Real-time Updates**: `0ms` (no debouncing) - Immediate response needed
-
-```javascript
-// Example: Different delays for different use cases
-const lazyLoader = new InView({ selector: ".lazy", delay: 50 });
-const animator = new InView({ selector: ".animate", delay: 150 });
-const tracker = new InView({ selector: ".track", delay: 300 });
-```
+MIT
 
 ## Common Use Cases
 
