@@ -77,13 +77,14 @@ import InView from "@opuu/inview";
 
 const observer = new InView({
 	selector: ".lazy-image",
-	delay: 100, // 100ms delay before triggering callback
+	delay: 100, // 100ms debounce delay - callbacks are debounced for better performance
 	precision: "high", // High precision tracking (0.1% increments)
 	single: true, // Only observe the first matching element
 });
 
 observer.on("enter", (event) => {
 	// Load image when it enters viewport
+	// This callback is debounced - rapid scroll events won't trigger multiple times
 	const img = event.target;
 	img.src = img.dataset.src;
 	img.classList.add("loaded");
@@ -111,12 +112,12 @@ const observer = new InView({
 
 ### Configuration Options
 
-| Option      | Type                              | Default      | Description                                        |
-| ----------- | --------------------------------- | ------------ | -------------------------------------------------- |
-| `selector`  | `string`                          | **required** | CSS selector for elements to observe               |
-| `delay`     | `number`                          | `0`          | Delay in milliseconds before triggering callbacks  |
-| `precision` | `"low"` \| `"medium"` \| `"high"` | `"medium"`   | Intersection detection precision                   |
-| `single`    | `boolean`                         | `false`      | Whether to observe only the first matching element |
+| Option      | Type                              | Default      | Description                                                |
+| ----------- | --------------------------------- | ------------ | ---------------------------------------------------------- |
+| `selector`  | `string`                          | **required** | CSS selector for elements to observe                       |
+| `delay`     | `number`                          | `0`          | Debounce delay in milliseconds before triggering callbacks |
+| `precision` | `"low"` \| `"medium"` \| `"high"` | `"medium"`   | Intersection detection precision                           |
+| `single`    | `boolean`                         | `false`      | Whether to observe only the first matching element         |
 
 #### Precision Levels
 
@@ -165,10 +166,10 @@ observer.resume();
 
 #### `setDelay(delay)`
 
-Update the callback delay:
+Update the debounce delay:
 
 ```javascript
-observer.setDelay(200); // Set 200ms delay
+observer.setDelay(200); // Set 200ms debounce delay
 ```
 
 #### `destroy()`
@@ -214,6 +215,50 @@ const observer: InView = new InView(config);
 observer.on("enter", (event: InViewEvent) => {
 	console.log(`Element ${event.target.id} is ${event.percentage}% visible`);
 });
+```
+
+## Performance & Debouncing
+
+InView includes intelligent debouncing to optimize performance during rapid scrolling:
+
+### How Debouncing Works
+
+When a `delay` is configured, InView will debounce callback execution:
+
+- **Without debouncing**: Each scroll event triggers callbacks immediately
+- **With debouncing**: Callbacks are delayed and previous pending callbacks are cancelled
+
+```javascript
+const observer = new InView({
+	selector: ".element",
+	delay: 100, // 100ms debounce delay
+});
+
+observer.on("enter", (event) => {
+	// This callback is debounced - only executes after 100ms of no new events
+	console.log("Element entered viewport");
+});
+```
+
+### Benefits of Debouncing
+
+- **Reduced CPU Usage**: Fewer callback executions during rapid scrolling
+- **Smoother Performance**: Prevents callback spam that can cause frame drops
+- **Battery Efficiency**: Less processing on mobile devices
+- **Better UX**: More predictable behavior during fast scrolling
+
+### Recommended Delay Values
+
+- **Lazy Loading**: `50-100ms` - Balance between responsiveness and performance
+- **Animations**: `100-200ms` - Prevents animation flickering during scroll
+- **Analytics**: `200-500ms` - Ensures user has settled on content
+- **Real-time Updates**: `0ms` (no debouncing) - Immediate response needed
+
+```javascript
+// Example: Different delays for different use cases
+const lazyLoader = new InView({ selector: ".lazy", delay: 50 });
+const animator = new InView({ selector: ".animate", delay: 150 });
+const tracker = new InView({ selector: ".track", delay: 300 });
 ```
 
 ## Common Use Cases
@@ -265,6 +310,7 @@ import InView from "@opuu/inview";
 const infiniteObserver = new InView({
 	selector: ".load-more-trigger",
 	single: true,
+	delay: 200, // Debounce to prevent multiple rapid loads
 });
 
 infiniteObserver.on("enter", async (event) => {
@@ -282,7 +328,10 @@ infiniteObserver.on("enter", async (event) => {
 ```javascript
 import InView from "@opuu/inview";
 
-const performanceObserver = new InView(".track-visibility");
+const performanceObserver = new InView({
+	selector: ".track-visibility",
+	delay: 300, // Debounce analytics calls
+});
 
 performanceObserver.on("enter", (event) => {
 	// Track when important content becomes visible
